@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { generatePuzzle } from './functions/generatePuzzle';
 import { removeCells } from './functions/removeCells';
 import { BaseButton } from './components/BaseButton';
 import { checkInput } from './functions/checkInput';
-import { solveBoard} from './functions/solvedBoard'; // Import new functions
 import { getHint } from './functions/getHint';
+import { IconButton } from './components/IconButton';
+
+import { MdCheckCircle } from 'react-icons/md';
+import { BiBulb } from 'react-icons/bi';
+import { RiRobot2Line } from 'react-icons/ri';
+import ImageUploadButton from './components/UploadButton';
+import { solvePuzzle } from './functions/solvePuzzle';
+import ImageSolver from './components/ImageSolver';
+
 export const Board: React.FC = () => {
 	const { board: initialBoard, readonlyCells: initialReadonlyCells } = generatePuzzle();
 	const [board, setBoard] = useState<number[][]>(initialBoard);
@@ -15,16 +23,22 @@ export const Board: React.FC = () => {
 	// 	generateNewPuzzle('medium');
 	// }, []);
 
+	// const handleImageUpload = (file: File) => {
+	// 	console.log('Uploaded file:', file);
+	// 	// You can handle the uploaded file, e.g., upload it to a server
+	// };
+	const handleImageUpload = (recognizedBoard: number[][]) => {
+		setBoard(recognizedBoard);
+		setReadonlyCells(Array(9).fill(Array(9).fill(true)));
+	  };
+
+	  
 	const handleChange = (row: number, col: number, value: string) => {
 		if (readonlyCells[row][col]) return;
 
 		if (/^[1-9]?$/.test(value)) {
 			setBoard(prevBoard => {
-				const newBoard = prevBoard.map((r, rowIndex) => 
-					r.map((cell, colIndex) => 
-						(rowIndex === row && colIndex === col ? parseInt(value) || 0 : cell)
-					)
-				);
+				const newBoard = prevBoard.map((r, rowIndex) => r.map((cell, colIndex) => (rowIndex === row && colIndex === col ? parseInt(value) || 0 : cell)));
 				return newBoard;
 			});
 		}
@@ -53,25 +67,12 @@ export const Board: React.FC = () => {
 		}
 	};
 
-	const solvePuzzle = () => {
-		const solvedBoard = solveBoard(board);
-		if (solvedBoard) {
-			setBoard(solvedBoard);
-		} else {
-			alert('No solution found for the current board.');
-		}
-	};
-
 	const revealHint = () => {
 		const hint = getHint(board);
 		if (hint) {
 			const { row, col, value } = hint;
 			setBoard(prevBoard => {
-				const newBoard = prevBoard.map((r, rowIndex) =>
-					r.map((cell, colIndex) =>
-						rowIndex === row && colIndex === col ? value : cell
-					)
-				);
+				const newBoard = prevBoard.map((r, rowIndex) => r.map((cell, colIndex) => (rowIndex === row && colIndex === col ? value : cell)));
 				return newBoard;
 			});
 		} else {
@@ -91,11 +92,10 @@ export const Board: React.FC = () => {
 	return (
 		<div className='max-w-md mx-auto p-4 mt-8 bg-gray-100 rounded-lg shadow-lg'>
 			<div className='flex justify-between items-center mb-4'>
-				<BaseButton title='Easy' color='bg-green-500' onClick={() => generateNewPuzzle('easy')} />
-				<BaseButton title='Medium' color='bg-yellow-500' onClick={() => generateNewPuzzle('medium')} />
-				<BaseButton title='Hard' color='bg-red-500' onClick={() => generateNewPuzzle('hard')} />
+				<BaseButton title='Easy' color='bg-blue-700 hover:bg-blue-500' onClick={() => generateNewPuzzle('easy')} />
+				<BaseButton title='Medium' color='bg-teal-700 hover:bg-teal-600' onClick={() => generateNewPuzzle('medium')} />
+				<BaseButton title='Hard' color='bg-red-600 hover:bg-red-500' onClick={() => generateNewPuzzle('hard')} />
 			</div>
-
 			<div className='grid grid-cols-9 gap-1'>
 				{board?.map((row, rowIndex) =>
 					row?.map((cell, colIndex) => (
@@ -119,10 +119,24 @@ export const Board: React.FC = () => {
 					))
 				)}
 			</div>
+			<div className='flex justify-between items-center mt-4 space-x-4'>
+				<IconButton icon={<MdCheckCircle />} reversed title='Check Solution' color='text-white bg-emerald-600 hover:bg-emerald-500' onClick={checkSolution} />
+				<IconButton
+					icon={<RiRobot2Line />}
+					reversed
+					title='Solve'
+					color='text-white bg-sky-600 hover:bg-sky-500'
+					onClick={() => {
+						solvePuzzle(board, setBoard);
+					}}
+				/>
+				<IconButton icon={<BiBulb />} reversed title='Hint' color='text-white bg-amber-600 hover:bg-amber-500' onClick={revealHint} />
+			</div>
 
-			<BaseButton title='Check Solution' color='bg-blue-500' onClick={checkSolution} />
-			<BaseButton title='Solve' color='bg-blue-500' onClick={solvePuzzle} /> {/* Solve Button */}
-			<BaseButton title='Hint' color='bg-red-500' onClick={revealHint} /> {/* Hint Button */}
+			<div className='max-w-md mx-auto p-4 mt-8'>
+				{/* <ImageUploadButton onUpload={handleImageUpload} /> */}
+				<ImageSolver onBoardDetected={handleImageUpload} />
+			</div>
 		</div>
 	);
 };
