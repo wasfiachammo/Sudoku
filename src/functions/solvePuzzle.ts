@@ -8,4 +8,4 @@ export const solvePuzzle = (board: number[][], setBoard: any) => {
 		alert('No solution found for the current board.');
 	}
 };
-// TODO: Change alert to toastify use  npm i react-toastify
+
